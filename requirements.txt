@@ -1,6 +1,6 @@
-flask
-flask-cors
-yt-dlp 
-requests
-beautifulsoup4
-lxml
+Flask==3.0.0
+flask-cors==4.0.0
+yt-dlp==2024.12.13
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
