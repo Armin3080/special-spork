@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X DOWNLOADER | حرفه‌ای‌ترین دانلودر</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='85' font-size='85' text-anchor='middle' fill='%238b5cf6'>⚡</text></svg>">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="gradient-bg">
+        <div class="gradient-orb orb1"></div>
+        <div class="gradient-orb orb2"></div>
+        <div class="gradient-orb orb3"></div>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-bolt"></i>
+                    <i class="fas fa-download download-icon"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-x">X</span>
+                    <span class="logo-name">DOWNLOADER</span>
+                </div>
+            </div>
+            
+            <div class="language-switch">
+                <button class="lang-btn active" data-lang="fa">
+                    <i class="fas fa-flag-iran"></i> فارسی
+                </button>
+                <button class="lang-btn" data-lang="en">
+                    <i class="fas fa-flag-usa"></i> English
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="hero-section">
+                <h1 class="title">
+                    <span class="title-x">X</span>
+                    <span class="title-downloader">DOWNLOADER</span>
+                </h1>
+                <p class="subtitle" data-fa="⚡ هر چیزی را با سرعت نور دانلود کن ⚡" data-en="⚡ Download anything at light speed ⚡">
+                    ⚡ هر چیزی را با سرعت نور دانلود کن ⚡
+                </p>
+            </div>
+
+            <!-- باکس ورودی لینک -->
+            <div class="input-card glass">
+                <div class="input-group">
+                    <i class="fas fa-link input-icon"></i>
+                    <input type="text" id="urlInput" placeholder="https://youtube.com/... یا هر لینک دیگری ...">
+                    <button id="analyzeBtn" class="btn-primary">
+                        <i class="fas fa-search"></i>
+                        <span data-fa="تحلیل" data-en="Analyze">تحلیل</span>
+                    </button>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="quick-btn" data-url="https://youtube.com">
+                        <i class="fab fa-youtube"></i> YouTube
+                    </button>
+                    <button class="quick-btn" data-url="https://instagram.com">
+                        <i class="fab fa-instagram"></i> Instagram
+                    </button>
+                    <button class="quick-btn" data-url="https://aparat.com">
+                        <i class="fas fa-video"></i> آپارات
+                    </button>
+                    <button class="quick-btn" data-url="https://soundcloud.com">
+                        <i class="fab fa-soundcloud"></i> SoundCloud
+                    </button>
+                </div>
+            </div>
+
+            <!-- بخش بارگذاری -->
+            <div id="loadingSection" class="loading-section" style="display: none;">
+                <div class="spinner"></div>
+                <p data-fa="در حال تحلیل لینک..." data-en="Analyzing link...">در حال تحلیل لینک...</p>
+            </div>
+
+            <!-- بخش اطلاعات ویدیو -->
+            <div id="infoSection" class="info-section glass" style="display: none;">
+                <div class="video-header">
+                    <img id="thumbnail" class="thumbnail" src="" alt="thumbnail">
+                    <div class="video-details">
+                        <h3 id="videoTitle"></h3>
+                        <div class="video-meta">
+                            <span><i class="fas fa-clock"></i> <span id="duration"></span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="formats-section">
+                    <h4 data-fa="کیفیت‌های موجود" data-en="Available Qualities">کیفیت‌های موجود</h4>
+                    <div id="formatsList" class="formats-grid"></div>
+                </div>
+            </div>
+
+            <!-- بخش استخراج لینک از صفحه -->
+            <div class="extract-card glass">
+                <h3>
+                    <i class="fas fa-magic"></i>
+                    <span data-fa="استخراج خودکار لینک از صفحه" data-en="Extract links from page">استخراج خودکار لینک از صفحه</span>
+                </h3>
+                <div class="input-group small">
+                    <i class="fas fa-globe"></i>
+                    <input type="text" id="pageUrlInput" placeholder="https://example.com/page">
+                    <button id="extractLinksBtn" class="btn-secondary">
+                        <i class="fas fa-download"></i>
+                        <span data-fa="استخراج" data-en="Extract">استخراج</span>
+                    </button>
+                </div>
+                <div id="extractedLinks" class="extracted-links"></div>
+            </div>
+
+            <!-- بخش دانلودهای فعال -->
+            <div class="downloads-card glass">
+                <h3>
+                    <i class="fas fa-tasks"></i>
+                    <span data-fa="دانلودهای فعال" data-en="Active Downloads">دانلودهای فعال</span>
+                </h3>
+                <div id="activeDownloads" class="active-downloads">
+                    <div class="empty-state">
+                        <i class="fas fa-cloud-download-alt"></i>
+                        <p data-fa="هیچ دانلود فعالی وجود ندارد" data-en="No active downloads">هیچ دانلود فعالی وجود ندارد</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بخش فایل‌های دانلود شده -->
+            <div class="history-card glass">
+                <h3>
+                    <i class="fas fa-history"></i>
+                    <span data-fa="فایل‌های دانلود شده" data-en="Downloaded Files">فایل‌های دانلود شده</span>
+                    <button id="refreshHistoryBtn" class="icon-btn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </h3>
+                <div id="downloadHistory" class="history-list">
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p data-fa="هیچ فایلی دانلود نشده است" data-en="No files downloaded yet">هیچ فایلی دانلود نشده است</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>X DOWNLOADER | <span data-fa="با سرعت نور دانلود کن" data-en="Download at light speed">با سرعت نور دانلود کن</span></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
