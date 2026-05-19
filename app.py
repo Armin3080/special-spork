@@ -14,6 +14,10 @@ import shutil
 from pathlib import Path
 import sys
 import platform
+import subprocess
+import urllib.request
+import zipfile
+import tarfile
 
 app = Flask(__name__)
 CORS(app)
@@ -22,33 +26,138 @@ CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024
 DOWNLOAD_FOLDER = 'downloads'
 TEMP_FOLDER = 'temp'
+FFMPEG_FOLDER = 'ffmpeg'
 
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
+os.makedirs(FFMPEG_FOLDER, exist_ok=True)
 
 # دیکشنری برای نگهداری وضعیت دانلودها
 downloads_status = {}
 downloads_lock = threading.Lock()
 
+class FFmpegDownloader:
+    """کلاس برای دانلود خودکار FFmpeg"""
+    
+    @staticmethod
+    def get_system_info():
+        """تشخیص سیستم عامل و معماری"""
+        system = platform.system().lower()
+        arch = platform.machine().lower()
+        
+        if system == 'windows':
+            return 'windows', 'win64'
+        elif system == 'darwin':
+            return 'macos', 'macos64'
+        elif system == 'linux':
+            if 'aarch64' in arch or 'arm64' in arch:
+                return 'linux', 'linux-arm64'
+            else:
+                return 'linux', 'linux64'
+        else:
+            return None, None
+    
+    @staticmethod
+    def download_ffmpeg():
+        """دانلود خودکار FFmpeg از اینترنت"""
+        system, variant = FFmpegDownloader.get_system_info()
+        
+        if not system:
+            return None
+        
+        ffmpeg_path = os.path.join(FFMPEG_FOLDER, 'ffmpeg.exe' if system == 'windows' else 'ffmpeg')
+        
+        # اگر قبلاً دانلود شده بود
+        if os.path.exists(ffmpeg_path):
+            return ffmpeg_path
+        
+        print(f"📥 دانلود FFmpeg برای {system}...")
+        
+        # آدرس‌های دانلود FFmpeg
+        urls = {
+            'windows': 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip',
+            'linux64': 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz',
+            'linux-arm64': 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz',
+            'macos': 'https://evermeet.cx/ffmpeg/ffmpeg-6.1.zip'
+        }
+        
+        url_key = variant if system == 'linux' else system
+        if url_key not in urls:
+            return None
+        
+        download_url = urls[url_key]
+        archive_path = os.path.join(TEMP_FOLDER, f'ffmpeg.{ "zip" if system != "linux" else "tar.xz" }')
+        
+        try:
+            # دانلود فایل
+            print(f"🌐 دانلود از: {download_url}")
+            urllib.request.urlretrieve(download_url, archive_path)
+            print("✅ دانلود کامل شد")
+            
+            # استخراج فایل
+            if system == 'windows':
+                with zipfile.ZipFile(archive_path, 'r') as zip_ref:
+                    zip_ref.extractall(TEMP_FOLDER)
+                # پیدا کردن فایل ffmpeg.exe
+                for root, dirs, files in os.walk(TEMP_FOLDER):
+                    if 'ffmpeg.exe' in files:
+                        shutil.copy(os.path.join(root, 'ffmpeg.exe'), ffmpeg_path)
+                        break
+                        
+            elif system == 'linux':
+                import tarfile
+                with tarfile.open(archive_path, 'r:xz') as tar_ref:
+                    tar_ref.extractall(TEMP_FOLDER)
+                for root, dirs, files in os.walk(TEMP_FOLDER):
+                    if 'ffmpeg' in files and 'ffmpeg-git' not in root:
+                        shutil.copy(os.path.join(root, 'ffmpeg'), ffmpeg_path)
+                        break
+                        
+            elif system == 'macos':
+                with zipfile.ZipFile(archive_path, 'r') as zip_ref:
+                    zip_ref.extractall(TEMP_FOLDER)
+                for root, dirs, files in os.walk(TEMP_FOLDER):
+                    if 'ffmpeg' in files:
+                        shutil.copy(os.path.join(root, 'ffmpeg'), ffmpeg_path)
+                        break
+            
+            # تنظیم دسترسی اجرا برای لینوکس/مک
+            if system != 'windows':
+                os.chmod(ffmpeg_path, 0o755)
+            
+            # پاک کردن فایل‌های موقت
+            os.remove(archive_path)
+            print("✅ FFmpeg نصب و آماده شد")
+            
+            return ffmpeg_path
+            
+        except Exception as e:
+            print(f"❌ خطا در دانلود FFmpeg: {e}")
+            return None
+
 class DownloadManager:
     
     @staticmethod
     def get_ffmpeg_path():
-        """دریافت مسیر ffmpeg بر اساس سیستم عامل"""
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        
+        """دریافت مسیر ffmpeg - اگر نبود دانلود کن"""
         system = platform.system().lower()
-        
-        if system == 'windows':
-            ffmpeg_exe = os.path.join(current_dir, 'ffmpeg', 'ffmpeg.exe')
-        elif system == 'darwin':  # macOS
-            ffmpeg_exe = os.path.join(current_dir, 'ffmpeg', 'ffmpeg')
-        else:  # linux
-            ffmpeg_exe = os.path.join(current_dir, 'ffmpeg', 'ffmpeg')
+        ffmpeg_exe = os.path.join(FFMPEG_FOLDER, 'ffmpeg.exe' if system == 'windows' else 'ffmpeg')
         
         if os.path.exists(ffmpeg_exe):
-            os.chmod(ffmpeg_exe, 0o755)
             return ffmpeg_exe
+        
+        # دانلود خودکار
+        print("🔧 FFmpeg یافت نشد، در حال دانلود خودکار...")
+        downloaded = FFmpegDownloader.download_ffmpeg()
+        
+        if downloaded and os.path.exists(downloaded):
+            return downloaded
+        
+        # اگر باز هم نشد، از مسیر سیستم استفاده کن
+        import shutil
+        system_ffmpeg = shutil.which('ffmpeg')
+        if system_ffmpeg:
+            return system_ffmpeg
         
         return None
     
@@ -307,13 +416,26 @@ def delete_file(filename):
         return jsonify({'success': True})
     return jsonify({'error': 'فایل یافت نشد'}), 404
 
+@app.route('/health')
+def health_check():
+    """برای چک کردن سلامت سرویس در Render"""
+    return jsonify({'status': 'healthy', 'ffmpeg': DownloadManager.get_ffmpeg_path() is not None})
+
 if __name__ == '__main__':
     print("=" * 60)
     print("🚀 X DOWNLOADER در حال اجرا...")
     print("=" * 60)
-    print(f"📍 آدرس محلی: http://localhost:5000")
-    print(f"📍 آدرس شبکه: http://0.0.0.0:5000")
+    print(f"📍 آدرس محلی: http://localhost:{os.environ.get('PORT', 5000)}")
     print("=" * 60)
-    print("⚠️  برای توقف: Ctrl + C")
+    
+    # چک کردن FFmpeg در استارت
+    ffmpeg = DownloadManager.get_ffmpeg_path()
+    if ffmpeg:
+        print(f"✅ FFmpeg پیدا شد: {ffmpeg}")
+    else:
+        print("⚠️ FFmpeg پیدا نشد، بعضی قابلیت‌ها ممکن است کار نکنند")
+    
     print("=" * 60)
-    app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
+    
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
