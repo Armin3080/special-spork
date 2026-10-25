@@ -26,5 +26,5 @@
 ### 1. دانلود پروژه
 
 ```bash
-git clone https://github.com/yourusername/x-downloader.git
-cd x-downloader
+https://github.com/Armin3080/special-spork.git
+cd special-spork
