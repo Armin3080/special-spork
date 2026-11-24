@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="X DOWNLOADER — Aurora Crystal Glass. Secure media downloader powered by yt-dlp.">
+  <title>X DOWNLOADER | Aurora Crystal</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="aurora-bg" aria-hidden="true">
+    <div class="aurora-layer a1"></div>
+    <div class="aurora-layer a2"></div>
+    <div class="aurora-layer a3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-x">X</span>
+          <span class="brand-name">DOWNLOADER</span>
+        </div>
+      </div>
+      <nav class="header-actions">
+        <button type="button" class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+          <i class="fas fa-sliders-h"></i>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" class="lang-btn active" data-lang="fa">FA</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="site-main">
+    <div class="container">
+      <!-- Hero -->
+      <section class="hero">
+        <h1 class="hero-title">
+          <span class="gradient-text">X DOWNLOADER</span>
+        </h1>
+        <p class="hero-sub" data-i18n="hero_sub">دانلود امن و سریع ویدیو و صدا با رابط شیشه‌ای کریستالی</p>
+      </section>
+
+      <!-- URL Input -->
+      <section class="panel glass crystal" id="inputPanel">
+        <div class="panel-body">
+          <div class="url-row">
+            <div class="url-field">
+              <i class="fas fa-link field-icon"></i>
+              <input type="url" id="urlInput" autocomplete="off" spellcheck="false"
+                     placeholder="https://youtube.com/watch?v=..." data-i18n-placeholder="url_placeholder">
+            </div>
+            <button type="button" class="btn btn-primary" id="analyzeBtn">
+              <i class="fas fa-search"></i>
+              <span data-i18n="analyze">تحلیل</span>
+            </button>
+          </div>
+          <div class="quick-row">
+            <button type="button" class="chip" data-url="https://www.youtube.com"><i class="fab fa-youtube"></i> YouTube</button>
+            <button type="button" class="chip" data-url="https://www.instagram.com"><i class="fab fa-instagram"></i> Instagram</button>
+            <button type="button" class="chip" data-url="https://www.aparat.com"><i class="fas fa-video"></i> Aparat</button>
+            <button type="button" class="chip" data-url="https://soundcloud.com"><i class="fab fa-soundcloud"></i> SoundCloud</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading -->
+      <section id="loadingSection" class="state-panel" hidden>
+        <div class="spinner crystal-spin"></div>
+        <p data-i18n="analyzing">در حال تحلیل لینک...</p>
+      </section>
+
+      <!-- Error -->
+      <section id="errorSection" class="state-panel error-panel glass" hidden>
+        <i class="fas fa-exclamation-triangle"></i>
+        <p id="errorMessage"></p>
+        <button type="button" class="btn btn-ghost" id="errorDismiss" data-i18n="dismiss">بستن</button>
+      </section>
+
+      <!-- Video info + formats -->
+      <section id="infoSection" class="panel glass crystal" hidden>
+        <div class="panel-body">
+          <div class="video-meta-row">
+            <img id="thumbnail" class="thumb" src="" alt="" width="160" height="90" loading="lazy">
+            <div class="video-meta">
+              <h2 id="videoTitle" class="video-title"></h2>
+              <div class="meta-chips">
+                <span class="meta-chip"><i class="fas fa-clock"></i> <span id="duration">—</span></span>
+                <span class="meta-chip" id="uploaderChip" hidden><i class="fas fa-user"></i> <span id="uploader"></span></span>
+              </div>
+            </div>
+          </div>
+          <h3 class="section-label" data-i18n="qualities">کیفیت‌های موجود</h3>
+          <div id="formatsList" class="formats-grid"></div>
+        </div>
+      </section>
+
+      <!-- Page link extractor -->
+      <section class="panel glass">
+        <div class="panel-head">
+          <h3><i class="fas fa-magic"></i> <span data-i18n="extract_title">استخراج لینک از صفحه</span></h3>
+        </div>
+        <div class="panel-body">
+          <div class="url-row compact">
+            <div class="url-field">
+              <i class="fas fa-globe field-icon"></i>
+              <input type="url" id="pageUrlInput" placeholder="https://example.com/page" data-i18n-placeholder="page_placeholder">
+            </div>
+            <button type="button" class="btn btn-secondary" id="extractLinksBtn">
+              <i class="fas fa-search"></i>
+              <span data-i18n="extract">استخراج</span>
+            </button>
+          </div>
+          <div id="extractedLinks" class="links-list"></div>
+        </div>
+      </section>
+
+      <!-- Active downloads -->
+      <section class="panel glass">
+        <div class="panel-head">
+          <h3><i class="fas fa-tasks"></i> <span data-i18n="active_downloads">دانلودهای فعال</span></h3>
+        </div>
+        <div class="panel-body">
+          <div id="activeDownloads" class="active-list">
+            <div class="empty-state">
+              <i class="fas fa-cloud-download-alt"></i>
+              <p data-i18n="no_active">هیچ دانلود فعالی وجود ندارد</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- History / files -->
+      <section class="panel glass">
+        <div class="panel-head">
+          <h3><i class="fas fa-history"></i> <span data-i18n="history">فایل‌های دانلود شده</span></h3>
+          <div class="panel-actions">
+            <button type="button" class="icon-btn" id="refreshHistoryBtn" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="downloadHistory" class="history-list">
+            <div class="empty-state">
+              <i class="fas fa-folder-open"></i>
+              <p data-i18n="no_files">هیچ فایلی دانلود نشده است</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Settings drawer -->
+  <aside id="settingsDrawer" class="drawer glass" hidden aria-hidden="true">
+    <div class="drawer-head">
+      <h3 data-i18n="settings">تنظیمات</h3>
+      <button type="button" class="icon-btn" id="closeSettings" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="drawer-body">
+      <label class="field">
+        <span data-i18n="default_quality">کیفیت پیش‌فرض</span>
+        <select id="settingQuality">
+          <option value="best">Best</option>
+          <option value="1080">1080p</option>
+          <option value="720">720p</option>
+          <option value="480">480p</option>
+          <option value="audio">Audio only</option>
+        </select>
+      </label>
+      <label class="field">
+        <span data-i18n="max_concurrent">حداکثر دانلود همزمان</span>
+        <input type="number" id="settingConcurrent" min="1" max="10" value="3">
+      </label>
+      <label class="field">
+        <span data-i18n="language">زبان</span>
+        <select id="settingLanguage">
+          <option value="fa">فارسی</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+      <div class="field">
+        <span data-i18n="ffmpeg_status">وضعیت FFmpeg</span>
+        <div id="ffmpegStatus" class="status-pill">…</div>
+      </div>
+      <button type="button" class="btn btn-primary full" id="saveSettings" data-i18n="save">ذخیره</button>
+    </div>
+  </aside>
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>X DOWNLOADER · Aurora Crystal · <span data-i18n="footer_tag">دانلود محتوای عمومی مجاز</span></p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
